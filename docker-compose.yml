@@ -1,0 +1,12 @@
+version: '3.5'
+
+services:
+  mongodb:
+    image: mongo:4.0
+    hostname: "mongodb"
+    container_name: "magicreator_mongodb"
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_DATABASE: magicreator
+
