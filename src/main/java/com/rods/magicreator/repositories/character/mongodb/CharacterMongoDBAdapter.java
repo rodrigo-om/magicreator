@@ -4,12 +4,29 @@ import com.rods.magicreator.domain.models.Character;
 import com.rods.magicreator.domain.ports.out.IManageCharactersPersistence;
 import com.rods.magicreator.repositories.character.mongodb.models.CharacterModel;
 import org.bson.types.ObjectId;
+import org.ehcache.config.builders.CacheConfigurationBuilder;
+import org.ehcache.config.builders.CacheManagerBuilder;
+import org.ehcache.config.builders.ExpiryPolicyBuilder;
+import org.ehcache.config.builders.ResourcePoolsBuilder;
+import org.ehcache.core.EhcacheManager;
+import org.ehcache.expiry.Expirations;
+import org.ehcache.jsr107.Eh107Configuration;
+import org.springframework.boot.autoconfigure.cache.CacheManagerCustomizer;
+import org.springframework.boot.autoconfigure.cache.JCacheManagerCustomizer;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.*;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.ehcache.EhCacheCacheManager;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,6 +46,7 @@ public class CharacterMongoDBAdapter implements IManageCharactersPersistence {
     }
 
     @Override
+    @Cacheable("characters")
     public Optional<Character> findBy(String id) {
         return repository.findById(new ObjectId(id)).map(this::toCharacter);
     }
@@ -53,6 +71,7 @@ public class CharacterMongoDBAdapter implements IManageCharactersPersistence {
     }
 
     @Override
+    @CachePut(value = "characters", key = "#character.id")
     public Character update(Character character) {
         return toCharacter(
                 repository.save(fromCharacter(character))
@@ -60,6 +79,7 @@ public class CharacterMongoDBAdapter implements IManageCharactersPersistence {
     }
 
     @Override
+    @CacheEvict(value = "characters", key = "#id")
     public void delete(String id) {
         repository.deleteById(new ObjectId(id));
     }
@@ -102,3 +122,4 @@ public class CharacterMongoDBAdapter implements IManageCharactersPersistence {
                 .withMatcher("name", ExampleMatcher.GenericPropertyMatcher::contains);
     }
 }
+

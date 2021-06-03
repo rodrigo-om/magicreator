@@ -8,18 +8,23 @@ import com.rods.magicreator.repositories.character.mongodb.models.CharacterModel
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(SpringExtension.class)
 @Testcontainers
 @SpringBootTest
 public class CharacterMongoDBAdapterIT {
@@ -29,6 +34,9 @@ public class CharacterMongoDBAdapterIT {
     static void mongoDbProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
     }
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @Autowired
     private CharacterMongoDBAdapter adapter;
@@ -41,6 +49,10 @@ public class CharacterMongoDBAdapterIT {
     @BeforeEach
     public void init() {
         repository.deleteAll();
+    }
+
+    private Optional<Character> getCachedCharacter(String id) {
+        return Optional.ofNullable(cacheManager.getCache("characters")).map(c -> c.get(id, Character.class));
     }
 
     @Test
@@ -80,6 +92,7 @@ public class CharacterMongoDBAdapterIT {
         assertThat(found.getSchool()).isEqualTo(characterSaved.getSchool());
         assertThat(found.getHouse()).isEqualTo(characterSaved.getHouse());
         assertThat(found.getPatronus()).isEqualTo(characterSaved.getPatronus());
+        assertThat(getCachedCharacter(found.getId()).get()).isEqualTo(found);
     }
 
     @Test
@@ -147,5 +160,23 @@ public class CharacterMongoDBAdapterIT {
         assertThat(harryNow.getPatronus()).isEqualTo("Stag");
         assertThat(harryNow.getHouse()).isEqualTo(harryFirstDayInSchool.getHouse());
         assertThat(harryNow.getSchool()).isEqualTo(harryFirstDayInSchool.getSchool());
+    }
+
+    @Test
+    void CreateAndUpdate_Should_EvictFindByIdCache() {
+        //Arrange
+        CharacterModel characterSaved = repository.save(fixture.create(CharacterModel.class));
+
+        //Act
+        //Assert
+        Character found = adapter.findBy(characterSaved.getId().toString()).get();
+        assertThat(getCachedCharacter(found.getId()).get()).isEqualTo(found);
+
+        found.setHouse("new-house");
+        Character updated = adapter.update(found);
+        assertThat(getCachedCharacter(found.getId()).get()).isEqualTo(updated);
+
+        adapter.delete(updated.getId());
+        assertThat(getCachedCharacter(found.getId())).isEmpty();
     }
 }
