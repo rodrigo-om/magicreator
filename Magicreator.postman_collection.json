@@ -1,0 +1,296 @@
+{
+	"info": {
+		"_postman_id": "9fe4f25d-3efe-426d-b33e-9a98cd1094c9",
+		"name": "Magicreator",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "PotterAPI-External",
+			"item": [
+				{
+					"name": "Create Account in House API",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\t\"email\": \"\",\r\n\t\"password\": \"\",\r\n\t\"name\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://us-central1-rh-challenges.cloudfunctions.net/potterApi/users",
+							"protocol": "http",
+							"host": [
+								"us-central1-rh-challenges",
+								"cloudfunctions",
+								"net"
+							],
+							"path": [
+								"potterApi",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Houses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apiKey",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://us-central1-rh-challenges.cloudfunctions.net/potterApi/houses",
+							"protocol": "http",
+							"host": [
+								"us-central1-rh-challenges",
+								"cloudfunctions",
+								"net"
+							],
+							"path": [
+								"potterApi",
+								"houses"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Create Valid Character Copy",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Harry Potter\",\r\n    \"role\": \"student\",\r\n    \"school\": \"Hogwarts School of Witchcraft and Wizardry\",\r\n    \"house\": \"1760529f-6d51-4cb1-bcb1-25087fce5bde\",\r\n    \"patronus\": \"stag\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/character",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"character"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Character",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Harry Potter\",\r\n    \"role\": \"student\",\r\n    \"school\": \"Hogwarts School of Witchcraft and Wizardry\",\r\n    \"house\": \"1760529f-6d51-4cb1-bcb1-25087fce5bde\",\r\n    \"patronus\": \"stag\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/character",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"character"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Character",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"insira-o-id-aqui\",\r\n    \"name\": \"Harry Potter\",\r\n    \"role\": \"auror\",\r\n    \"school\": \"Hogwarts School of Witchcraft and Wizardry\",\r\n    \"house\": \"1760529f-6d51-4cb1-bcb1-25087fce5bde\",\r\n    \"patronus\": \"stag\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/character",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"character"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find All",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/characters?page=0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"characters"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find By Id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/character/60bdbf00c3ea5416ed2f9901",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"character",
+						"60bdbf00c3ea5416ed2f9901"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find By Filters",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/character?name=Potter&role=pai&house=1760529f-6d51-4cb1-bcb1-25087fce5bde",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"character"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "Potter"
+						},
+						{
+							"key": "role",
+							"value": "pai"
+						},
+						{
+							"key": "house",
+							"value": "1760529f-6d51-4cb1-bcb1-25087fce5bde"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Houses",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/houses",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"houses"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Character Invalid House",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Thiago Potter\",\r\n    \"role\": \"student\",\r\n    \"school\": \"Hogwarts School of Witchcraft and Wizardry\",\r\n    \"house\": \"an-invalid-house\",\r\n    \"patronus\": \"stag\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/character",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"character"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
