@@ -2,6 +2,9 @@ package com.rods.magicreator.integration.repositories.character.mongodb;
 
 import com.flextrade.jfixture.JFixture;
 import com.rods.magicreator.domain.models.Character;
+import com.rods.magicreator.domain.ports.out.IStoreCharacters;
+import com.rods.magicreator.domain.ports.out.IStoreCharacters.ErrorSearchingCharactersException;
+import com.rods.magicreator.domain.ports.out.IStoreCharacters.ErrorStoringCharacterException;
 import com.rods.magicreator.repositories.character.mongodb.CharacterMongoDBAdapter;
 import com.rods.magicreator.repositories.character.mongodb.CharacterRepository;
 import com.rods.magicreator.repositories.character.mongodb.models.CharacterModel;
@@ -56,7 +59,7 @@ public class CharacterMongoDBAdapterIT {
     }
 
     @Test
-    void Create_Should_FillIdCorrectly() {
+    void Create_Should_FillIdCorrectly() throws ErrorStoringCharacterException {
         //Arrange
         Character character = fixture.create(Character.class);
         character.setId(null);
@@ -73,11 +76,12 @@ public class CharacterMongoDBAdapterIT {
         assertThat(characterSaved.getRole()).isEqualTo(character.getRole());
         assertThat(characterSaved.getSchool()).isEqualTo(character.getSchool());
         assertThat(characterSaved.getHouse()).isEqualTo(character.getHouse());
+        assertThat(characterSaved.getHouseName()).isEqualTo(character.getHouseName());
         assertThat(characterSaved.getPatronus()).isEqualTo(character.getPatronus());
     }
 
     @Test
-    void FindById_Should_ConvertIdCorrectly_And_Find_Characters() {
+    void FindById_Should_ConvertIdCorrectly_And_Find_Characters() throws ErrorSearchingCharactersException {
         //Arrange
         CharacterModel characterSaved = repository.save(fixture.create(CharacterModel.class));
         String expectedPreviousIdConversion = characterSaved.getId().toString();
@@ -96,12 +100,12 @@ public class CharacterMongoDBAdapterIT {
     }
 
     @Test
-    void FindBy_Should_BuildFiltersCorrectly_WhenGivenExactMatchFields() {
+    void FindBy_Should_BuildFiltersCorrectly_WhenGivenExactMatchFields() throws ErrorSearchingCharactersException {
         //Arrange
-        CharacterModel draco = new CharacterModel(null, "Draco Malfoy", "Student", "Hogwarts", "1234Sonserina", "None");
-        CharacterModel hermione = new CharacterModel(null, "Hermione Granger", "Student", "Hogwarts", "4321Gryffindor", "Otter");
-        CharacterModel rony = new CharacterModel(null, "Rony Weasley", "Student", "Hogwarts", "4321Gryffindor", "Terrier");
-        CharacterModel minerva = new CharacterModel(null, "Minerva McGonagall", "Professor", "Hogwarts", "4321Gryffindor", "Cat");
+        CharacterModel draco = new CharacterModel(null, "Draco Malfoy", "Student", "Hogwarts", "1234Sonserina", "None", "Sonserina");
+        CharacterModel hermione = new CharacterModel(null, "Hermione Granger", "Student", "Hogwarts", "4321Gryffindor", "Otter", "Gryffindor");
+        CharacterModel rony = new CharacterModel(null, "Rony Weasley", "Student", "Hogwarts", "4321Gryffindor", "Terrier", "Gryffindor");
+        CharacterModel minerva = new CharacterModel(null, "Minerva McGonagall", "Professor", "Hogwarts", "4321Gryffindor", "Cat", "Gryffindor");
         repository.saveAll(List.of(draco, hermione, rony, minerva));
 
         //Act
@@ -118,12 +122,12 @@ public class CharacterMongoDBAdapterIT {
     }
 
     @Test
-    void FindBy_Should_BuildFiltersCorrectly_WhenGivenFieldsThatMatchOnContain() {
+    void FindBy_Should_BuildFiltersCorrectly_WhenGivenFieldsThatMatchOnContain() throws ErrorSearchingCharactersException {
         //Arrange
-        CharacterModel draco = new CharacterModel(null, "Draco Malfoy", "Student", "Hogwarts", "1234Sonserina", "None");
-        CharacterModel lucius = new CharacterModel(null, "Lucius Malfoy", "Death Eater", "Hogwarts", "1234Sonserina", "CantHaveOne");
-        CharacterModel cissy = new CharacterModel(null, "Narcissa Malfoy", "Death Eater", "Hogwarts", "1234Sonserina", "Terrier");
-        CharacterModel minerva = new CharacterModel(null, "Minerva McGonagall", "Professor", "Hogwarts", "4321Gryffindor", "Cat");
+        CharacterModel draco = new CharacterModel(null, "Draco Malfoy", "Student", "Hogwarts", "1234Sonserina", "None", "Sonserina");
+        CharacterModel lucius = new CharacterModel(null, "Lucius Malfoy", "Death Eater", "Hogwarts", "1234Sonserina", "CantHaveOne", "Sonserina");
+        CharacterModel cissy = new CharacterModel(null, "Narcissa Malfoy", "Death Eater", "Hogwarts", "1234Sonserina", "Terrier", "Sonserina");
+        CharacterModel minerva = new CharacterModel(null, "Minerva McGonagall", "Professor", "Hogwarts", "4321Gryffindor", "Cat", "Gryffindor");
         repository.saveAll(List.of(draco, lucius, cissy, minerva));
 
         //Act
@@ -136,10 +140,10 @@ public class CharacterMongoDBAdapterIT {
     }
 
     @Test
-    void Update_Should_UpdateCorrectlyAnyChangedField() {
+    void Update_Should_UpdateCorrectlyAnyChangedField() throws ErrorStoringCharacterException {
         //Arrange
         CharacterModel harryFirstDayInSchool = repository.save(new CharacterModel(
-                null, "Harry Potter", "Student", "Hogwarts", "4321Gryffindor", "None"
+                null, "Harry Potter", "Student", "Hogwarts", "4321Gryffindor", "None", "Gryffindor"
         ));
 
         Character harryAdult = new Character(
@@ -148,6 +152,7 @@ public class CharacterMongoDBAdapterIT {
                 "Auror",
                 harryFirstDayInSchool.getSchool(),
                 harryFirstDayInSchool.getHouse(),
+                harryFirstDayInSchool.getHouseName(),
                 "Stag"
         );
 
@@ -163,7 +168,7 @@ public class CharacterMongoDBAdapterIT {
     }
 
     @Test
-    void CreateAndUpdate_Should_EvictFindByIdCache() {
+    void CreateAndUpdate_Should_EvictFindByIdCache() throws ErrorSearchingCharactersException, ErrorStoringCharacterException, IStoreCharacters.ErrorDeletingCharacterException {
         //Arrange
         CharacterModel characterSaved = repository.save(fixture.create(CharacterModel.class));
 

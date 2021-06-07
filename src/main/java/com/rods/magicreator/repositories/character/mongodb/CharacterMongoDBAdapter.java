@@ -1,38 +1,26 @@
 package com.rods.magicreator.repositories.character.mongodb;
 
 import com.rods.magicreator.domain.models.Character;
-import com.rods.magicreator.domain.ports.out.IManageCharactersPersistence;
+import com.rods.magicreator.domain.ports.out.IStoreCharacters;
 import com.rods.magicreator.repositories.character.mongodb.models.CharacterModel;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.ehcache.config.builders.CacheConfigurationBuilder;
-import org.ehcache.config.builders.CacheManagerBuilder;
-import org.ehcache.config.builders.ExpiryPolicyBuilder;
-import org.ehcache.config.builders.ResourcePoolsBuilder;
-import org.ehcache.core.EhcacheManager;
-import org.ehcache.expiry.Expirations;
-import org.ehcache.jsr107.Eh107Configuration;
-import org.springframework.boot.autoconfigure.cache.CacheManagerCustomizer;
-import org.springframework.boot.autoconfigure.cache.JCacheManagerCustomizer;
-import org.springframework.cache.CacheManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.cache.ehcache.EhCacheCacheManager;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
-public class CharacterMongoDBAdapter implements IManageCharactersPersistence {
+@Slf4j
+public class CharacterMongoDBAdapter implements IStoreCharacters {
 
     final CharacterRepository repository;
 
@@ -41,47 +29,78 @@ public class CharacterMongoDBAdapter implements IManageCharactersPersistence {
     }
 
     @Override
-    public Page<Character> findAll(int page) {
-        return repository.findAll(PageRequest.of(page, 100)).map(this::toCharacter);
+    public Page<Character> findAll(int page) throws ErrorSearchingCharactersException {
+        try {
+            return repository.findAll(PageRequest.of(page, 100)).map(this::toCharacter);
+        } catch (Exception e) {
+            log.error("Error searching all characters - Page: {}", page, e);
+            throw new ErrorSearchingCharactersException(e);
+        }
     }
 
     @Override
     @Cacheable("characters")
-    public Optional<Character> findBy(String id) {
-        return repository.findById(new ObjectId(id)).map(this::toCharacter);
+    public Optional<Character> findBy(String id) throws ErrorSearchingCharactersException {
+        try {
+            return repository.findById(new ObjectId(id)).map(this::toCharacter);
+        } catch (Exception e) {
+            log.error("Error searching characters - Id: {}", id, e);
+            throw new ErrorSearchingCharactersException(e);
+        }
     }
 
     @Override
-    public Character create(Character character) {
-        return toCharacter(
-                repository.save(fromCharacter(character))
-        );
+    public Character create(Character character) throws ErrorStoringCharacterException {
+        try {
+            return toCharacter(
+                    repository.save(fromCharacter(character))
+            );
+        } catch (Exception e) {
+            log.error("Error creating character - Character Name: {}", character.getName(), e);
+            throw new ErrorStoringCharacterException("Error creating characters", e);
+        }
     }
 
     @Override
-    public List<Character> findBy(String name, String role, String school, String house, String patronus) {
-        Example<CharacterModel> example = Example.of(
-                buildExample(name, role, school, house, patronus),
-                matchNameContainingAndEverythingElseMustBeExact()
-        );
+    public List<Character> findBy(String name, String role, String school, String house, String patronus) throws ErrorSearchingCharactersException {
+        try {
+            Example<CharacterModel> example = Example.of(
+                    buildExample(name, role, school, house, patronus),
+                    matchNameContainingAndEverythingElseMustBeExact()
+            );
 
-        return repository.findAll(example).stream()
-                .map(this::toCharacter)
-                .collect(Collectors.toList());
+            return repository.findAll(example).stream()
+                    .map(this::toCharacter)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error searching character by dynamic filters - Name: {}, Role: {}, School: {}, House: {}, Patronus: {}",
+                    name, role, school, house, patronus, e);
+            throw new ErrorSearchingCharactersException(e);
+        }
     }
 
     @Override
     @CachePut(value = "characters", key = "#character.id")
-    public Character update(Character character) {
-        return toCharacter(
-                repository.save(fromCharacter(character))
-        );
+    public Character update(Character character) throws ErrorStoringCharacterException {
+        try {
+            return toCharacter(
+                    repository.save(fromCharacter(character))
+            );
+        } catch (Exception e) {
+            log.error("Error updating character - Character Id: {}", character.getId(), e);
+            throw new ErrorStoringCharacterException("Error updating character", e);
+        }
     }
 
     @Override
     @CacheEvict(value = "characters", key = "#id")
-    public void delete(String id) {
-        repository.deleteById(new ObjectId(id));
+    public void delete(String id) throws ErrorDeletingCharacterException {
+        try {
+            repository.deleteById(new ObjectId(id));
+        } catch (Exception e) {
+            log.error("Error deleting character - Character Id: {}", id, e);
+            throw new ErrorDeletingCharacterException("Error creating characters", e);
+        }
     }
 
     private CharacterModel buildExample(String name, String role, String school, String house, String patronus) {
@@ -101,6 +120,7 @@ public class CharacterMongoDBAdapter implements IManageCharactersPersistence {
                 .role(model.getRole())
                 .school(model.getSchool())
                 .house(model.getHouse())
+                .houseName(model.getHouseName())
                 .patronus(model.getPatronus())
                 .build();
     }
@@ -112,6 +132,7 @@ public class CharacterMongoDBAdapter implements IManageCharactersPersistence {
                 .role(character.getRole())
                 .school(character.getSchool())
                 .house(character.getHouse())
+                .houseName(character.getHouseName())
                 .patronus(character.getPatronus())
                 .build();
     }

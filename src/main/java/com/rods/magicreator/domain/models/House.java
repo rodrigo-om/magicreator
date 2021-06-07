@@ -1,9 +1,7 @@
 package com.rods.magicreator.domain.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
@@ -13,15 +11,10 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-@Builder
+@With
+@Builder(toBuilder = true)
 public class House{
-    public String school;
-    public List<String> colors;
-    public String founder;
-    public String houseGhost;
-    public String headOfHouse;
-    public String name;
-    public String mascot;
-    public List<String> values;
     public String id;
+    public String name;
+    public String school;
 }
