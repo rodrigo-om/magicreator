@@ -13,7 +13,7 @@ import com.rods.magicreator.domain.ports.out.IStoreCharacters;
 import com.rods.magicreator.domain.ports.out.IStoreCharacters.ErrorDeletingCharacterException;
 import com.rods.magicreator.domain.ports.out.IStoreCharacters.ErrorSearchingCharactersException;
 import com.rods.magicreator.domain.ports.out.IStoreCharacters.ErrorStoringCharacterException;
-import com.rods.magicreator.domain.services.CharactersService;
+import com.rods.magicreator.domain.CharactersService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

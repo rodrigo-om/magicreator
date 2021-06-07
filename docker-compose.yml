@@ -1,6 +1,10 @@
 version: '3.5'
 
 services:
+  web:
+    image: "rodrigoom/magicreator:1.0"
+    ports:
+      - "8080:8080"
   mongodb:
     image: mongo:4.0
     hostname: "mongodb"
