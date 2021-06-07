@@ -10,8 +10,8 @@ This README aims to help you in running the magicreator application and explaini
 There are 3 main ways to run it:  
 
 1. From the contained docker-compose.yml file. It will deploy the application together with the database. *(RECOMMENDED)*
-3. From your favorite IDE
-4. From a terminal
+2. From your favorite IDE
+3. From a terminal
 
 Every method besides #1 requires you to generate your own api-key for accessing potter-api, so, for the sake of brevity, I will describe the recommended way here and jump to the next topics, but instructions for the other ways to run it will be described at the end of this README.
 
@@ -70,24 +70,29 @@ curl --location --request PUT 'http://localhost:8080/api/v1/character' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "id": "60bdd0d2554d3a32235bc229",
-    "name": "Thiago Potter",
-    "role": "pai",
+    "name": "James Potter",
+    "role": "Father",
     "school": "Hogwarts School of Witchcraft and Wizardry",
     "house": "1760529f-6d51-4cb1-bcb1-25087fce5bde",
     "patronus": "stag"
 }'
 ```
 
+Find by Filters
+```sh
+curl --location --request GET 'http://localhost:8080/api/v1/character?name=Potter&role=Father&house=1760529f-6d51-4cb1-bcb1-25087fce5bde'
+```
+
 -----
 ## How it was built
 
-![WhatsApp Image 2021-05-31 at 22.48.44.jpeg](https://www.dropbox.com/s/vai3jgcbj9z617h/photo_2021-06-07_05-14-39.jpg?dl=0&raw=1)
+![WhatsApp Image 2021-05-31 at 22.48.44.jpeg](https://www.dropbox.com/s/gsr6arjttww5e2z/photo_2021-06-07_20-10-48.jpg?dl=0&raw=1)
 
 Core technology versions:
 - [Java OpenJDK14]
 - [Spring Boot 2.5] (https://spring.io/)
 
-Following a [Hexagonal Architecture], I've built Inbound and Outbound ports to keep domain isolated, and technology-specific adapters (except for the IN controllers, I thought building adapters for them would be overkill)
+Following a [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/), I've built Inbound and Outbound ports to keep domain isolated, and technology-specific adapters (except for the IN controllers, I thought building adapters for them would be overkill). I've added the "HouseName" property to the characters just as an example of using the information from PotterAPI for more than just validation.
 
 #### Tests
 Building it through TDD, the project is *almost* completely unit and integration tested. You can run these tests in the project root folder with:
@@ -97,7 +102,7 @@ Building it through TDD, the project is *almost* completely unit and integration
 
 Or you can use your favorite IDE.
 
-Some of these tests are integration tests, but it's ok, [they have been configured to start a mongodb container](https://www.testcontainers.org/) when necessary and to kill it after.
+Some of these tests are integration tests, but it's ok, [they have been configured to start a mongodb container](https://www.testcontainers.org/) when necessary and to remove it after.
 
 ----
 
@@ -105,7 +110,7 @@ Some of these tests are integration tests, but it's ok, [they have been configur
 
 I was not up to date with Spring for quite a few years, having only used it in very small PoCs years ago, so it was quite challenging but an interesting experience learning more about it, it sure makes development faster when you get a grip on it. Having said that, I may have failed in some standard Spring good practices here and there from lack of experience with it, so feel free to point any of them. 
 
-Another point I think is worth talking about is the Exceptions flow in a hexagonal architecture. Coming from a funcional language where exceptions are nothing more but "Failed returns", and thus harder to invade domain boundaries, I had to do a bit of thinking when organizing possible checked exceptions and wrapping them so the Domain API was understandable enough for code outside of it to integrate properly. I saw a lot of debate about wheter exceptions should be wrapped or not, if they should be checked or not... and I went with what I thought was more "secure" to the domain. But again, please feel free to disagree and suggest a better approach, I was a bit bothered by how "crowded" the could get with this solution.
+Another point I think is worth talking about is the Exceptions flow in a hexagonal architecture. Coming from a funcional language where exceptions are nothing more but "Failed returns", and thus harder to invade domain boundaries, I had to do a bit of thinking when organizing possible checked exceptions and wrapping them so the Domain API was understandable enough for code outside of it to integrate properly. I saw a lot of debate about wheter exceptions should be wrapped or not, if they should be checked or not... and I went with what I thought was more "secure" to the domain. But again, please feel free to disagree and suggest a better approach, I was a bit bothered by how "crowded" the code could get with this solution.
 
 ----
 
@@ -120,9 +125,9 @@ The other 2 ways you can run the application are:
 - [Docker]
 
 ##### Running it:
-Very simple, you just need to import the project on your favorite IDE with Spring Framework support enabled, and hit Execute! Hopefully everything will go smoothly. For the PotterAPI apikey, you can [generate it](#generating-your-api-key) and place it on application.properties in the potterapi.apikey
+Very simple, you just need to import the project on your favorite IDE with Spring Framework support enabled, and hit Execute! Hopefully everything will go smoothly. For the PotterAPI apikey, you can [generate it](#generating-your-api-key) and place it on application.properties in the potterapi.apikey value
 
-Oh, and before I forget, one also requires the mongodb container running, so I've set up a docker-compose-mongo-only.yml file for these situations. So make sure to 
+Oh, and before I forget, this one requires the mongodb container running, so I've set up a docker-compose-mongo-only.yml file for these situations. So make sure to 
 ```sh
 docker compose -f .\docker-compose-mongo-only.yml up
 ```
