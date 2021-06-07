@@ -61,9 +61,11 @@ public class CharactersController {
     }
 
     @GetMapping("/character/{id}")
-    public Optional<Character> findById(@PathVariable String id) throws CouldNotSearchCharactersException {
+    public ResponseEntity<Object> findById(@PathVariable String id) throws CouldNotSearchCharactersException {
         try {
-            return charactersManager.findBy(id);
+            return charactersManager.findBy(id)
+                    .map(x -> new ResponseEntity<Object>(x, HttpStatus.OK))
+                    .orElse(new ResponseEntity<Object>("{ \"message\":\"Id not corresponding to any Character\" }", HttpStatus.OK));
         } catch (CouldNotSearchCharactersException e) {
             if (e.contains(IllegalArgumentException.class))
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMostSpecificCause().getMessage(), e);

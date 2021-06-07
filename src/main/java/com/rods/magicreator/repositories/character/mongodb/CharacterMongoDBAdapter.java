@@ -39,7 +39,7 @@ public class CharacterMongoDBAdapter implements IStoreCharacters {
     }
 
     @Override
-    @Cacheable("characters")
+    @Cacheable(value = "characters", unless = "#result == null")
     public Optional<Character> findBy(String id) throws ErrorSearchingCharactersException {
         try {
             return repository.findById(new ObjectId(id)).map(this::toCharacter);

@@ -25,7 +25,7 @@ public class PotterApiHttpAdapter implements IObtainHousesInfo {
         this.api = api;
     }
 
-    @Cacheable("houses")
+    @Cacheable(value = "houses", unless = "#result == null")
     public Optional<House> getHouseById(String id) throws ErrorObtainingHousesException {
         try {
             List<House> houses = getHouses();
