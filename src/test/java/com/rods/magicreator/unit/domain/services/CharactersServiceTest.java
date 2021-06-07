@@ -3,23 +3,31 @@ package com.rods.magicreator.unit.domain.services;
 import com.flextrade.jfixture.JFixture;
 import com.rods.magicreator.domain.models.Character;
 import com.rods.magicreator.domain.models.House;
+import com.rods.magicreator.domain.ports.in.IDisplayHouses;
+import com.rods.magicreator.domain.ports.in.IDisplayHouses.CouldNotSearchHousesException;
 import com.rods.magicreator.domain.ports.in.IManageCharacters;
-import com.rods.magicreator.domain.ports.in.IManageCharacters.CouldNotCreateCharacterException;
-import com.rods.magicreator.domain.ports.in.IManageCharacters.CouldNotUpdateCharacterException;
-import com.rods.magicreator.domain.ports.in.IManageCharacters.InvalidHouseProvidedException;
+import com.rods.magicreator.domain.ports.in.IManageCharacters.*;
 import com.rods.magicreator.domain.ports.out.IObtainHousesInfo;
 import com.rods.magicreator.domain.ports.out.IObtainHousesInfo.ErrorObtainingHousesException;
 import com.rods.magicreator.domain.ports.out.IStoreCharacters;
+import com.rods.magicreator.domain.ports.out.IStoreCharacters.ErrorDeletingCharacterException;
+import com.rods.magicreator.domain.ports.out.IStoreCharacters.ErrorSearchingCharactersException;
 import com.rods.magicreator.domain.ports.out.IStoreCharacters.ErrorStoringCharacterException;
 import com.rods.magicreator.domain.services.CharactersService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -226,4 +234,219 @@ public class CharactersServiceTest {
         assertThat(exception.getCause()).isInstanceOfAny(ErrorStoringCharacterException.class);
         assertThat(exception.getMostSpecificCause()).isInstanceOfAny(RuntimeException.class);
     }
+
+    // ----------- FINDALL() TESTS ---------------------------------
+
+    @Test
+    void FindAll_Should_ReturnCorrectlyGivenThereAreCharacters() throws ErrorSearchingCharactersException, CouldNotSearchCharactersException {
+        //Arrange
+        Page<Character> characters = new PageImpl<>(List.of(
+                fixture.create(Character.class),
+                fixture.create(Character.class),
+                fixture.create(Character.class)
+        ));
+
+        when(charactersRepositoryMock.findAll(1)).thenReturn(characters);
+
+        //Act
+        Page<Character> charactersRetrieved = service.findAll(1);
+
+        //Assert
+        assertThat(charactersRetrieved).usingRecursiveComparison().isEqualTo(characters);
+    }
+
+    @Test
+    void FindAll_Should_ReturnCorrectlyEvenThoughThereAreNoCharacters() throws ErrorSearchingCharactersException, CouldNotSearchCharactersException {
+        //Arrange
+        Page<Character> noCharacters = new PageImpl<>(Collections.emptyList());
+
+        when(charactersRepositoryMock.findAll(1)).thenReturn(noCharacters);
+
+        //Act
+        Page<Character> charactersRetrieved = service.findAll(1);
+
+        //Assert
+        assertThat(charactersRetrieved).usingRecursiveComparison().isEqualTo(noCharacters);
+        assertThat(charactersRetrieved).isEmpty();
+    }
+
+    @Test
+    void FindAll_Should_ThrowExceptionWhenSearchHasAnError() throws ErrorSearchingCharactersException, CouldNotSearchCharactersException {
+        //Arrange
+        when(charactersRepositoryMock.findAll(1)).thenThrow(new ErrorSearchingCharactersException(new RuntimeException("Error reaching db")));
+
+        //Act
+        //Assert
+        CouldNotSearchCharactersException exception = assertThrows(CouldNotSearchCharactersException.class, () -> {
+            service.findAll(1);
+        });
+        assertThat(exception.getMessage()).contains("Error searching characters");
+        assertThat(exception.getCause()).isInstanceOfAny(ErrorSearchingCharactersException.class);
+        assertThat(exception.getMostSpecificCause()).isInstanceOfAny(RuntimeException.class);
+    }
+
+    // ----------- FINDBY() TESTS ---------------------------------
+
+    @Test
+    void FindBy_Should_ReturnCorrectlyGivenThereIsACharacter() throws ErrorSearchingCharactersException, CouldNotSearchCharactersException {
+        //Arrange
+        Character character = fixture.create(Character.class);
+
+        when(charactersRepositoryMock.findBy("1")).thenReturn(Optional.of(character));
+
+        //Act
+        Optional<Character> charactersRetrieved = service.findBy("1");
+
+        //Assert
+        assertThat(charactersRetrieved).isPresent();
+        assertThat(charactersRetrieved.get()).usingRecursiveComparison().isEqualTo(character);
+    }
+
+    @Test
+    void FindBy_Should_ReturnCorrectlyEvenThoughThereAreNoCharacters() throws ErrorSearchingCharactersException, CouldNotSearchCharactersException {
+        //Arrange
+        when(charactersRepositoryMock.findBy("1")).thenReturn(Optional.empty());
+
+        //Act
+        Optional<Character> charactersRetrieved = service.findBy("1");
+
+        //Assert
+        assertThat(charactersRetrieved).isEmpty();
+    }
+
+    @Test
+    void FindBy_Should_ThrowExceptionWhenSearchHasAnError() throws ErrorSearchingCharactersException, CouldNotSearchCharactersException {
+        //Arrange
+        when(charactersRepositoryMock.findBy("1")).thenThrow(new ErrorSearchingCharactersException(new RuntimeException("Error reaching db")));
+
+        //Act
+        //Assert
+        CouldNotSearchCharactersException exception = assertThrows(CouldNotSearchCharactersException.class, () -> {
+            service.findBy("1");
+        });
+        assertThat(exception.getMessage()).contains("Error searching characters");
+        assertThat(exception.getCause()).isInstanceOfAny(ErrorSearchingCharactersException.class);
+        assertThat(exception.getMostSpecificCause()).isInstanceOfAny(RuntimeException.class);
+    }
+
+    // ----------- FINDBY() TESTS ---------------------------------
+
+    @Test
+    void FindByFilters_Should_ReturnCorrectlyGivenThereAreCharacters() throws ErrorSearchingCharactersException, CouldNotSearchCharactersException {
+        //Arrange
+        List<Character> characters = List.of(
+                fixture.create(Character.class),
+                fixture.create(Character.class)
+        );
+
+        when(charactersRepositoryMock.findBy("a-name", "a-role", "a-school", "a-house", "a-patronus"))
+                .thenReturn(characters);
+
+        //Act
+        List<Character> charactersRetrieved = service.findBy("a-name", "a-role", "a-school", "a-house", "a-patronus");
+
+        //Assert
+        assertThat(charactersRetrieved).usingRecursiveComparison().isEqualTo(characters);
+    }
+
+    @Test
+    void FindByFilters_Should_ReturnCorrectlyEvenThoughThereAreNoCharacters() throws ErrorSearchingCharactersException, CouldNotSearchCharactersException {
+        //Arrange
+        when(charactersRepositoryMock.findBy("a-name", "a-role", "a-school", "a-house", "a-patronus"))
+                .thenReturn(Collections.emptyList());
+
+        //Act
+        List<Character> charactersRetrieved = service.findBy("a-name", "a-role", "a-school", "a-house", "a-patronus");
+
+        //Assert
+        assertThat(charactersRetrieved).isEmpty();
+    }
+
+    @Test
+    void FindByFilters_Should_ThrowExceptionWhenSearchHasAnError() throws ErrorSearchingCharactersException, CouldNotSearchCharactersException {
+        //Arrange
+        when(charactersRepositoryMock.findBy("a-name", "a-role", "a-school", "a-house", "a-patronus"))
+                .thenThrow(new ErrorSearchingCharactersException(new RuntimeException("Error reaching db")));
+
+        //Act
+        //Assert
+        CouldNotSearchCharactersException exception = assertThrows(CouldNotSearchCharactersException.class, () -> {
+            service.findBy("a-name", "a-role", "a-school", "a-house", "a-patronus");
+        });
+        assertThat(exception.getMessage()).contains("Error searching characters");
+        assertThat(exception.getCause()).isInstanceOfAny(ErrorSearchingCharactersException.class);
+        assertThat(exception.getMostSpecificCause()).isInstanceOfAny(RuntimeException.class);
+    }
+
+    // ----------- DELETE() TESTS ---------------------------------
+
+    @Test
+    void Delete_Should_ReturnCorrectlyNoErrorsOccur() throws ErrorDeletingCharacterException, CouldNotDeleteCharacterException {
+        //Arrange
+        doNothing().when(charactersRepositoryMock).delete("1");
+
+        //Act
+        //Assert
+        assertDoesNotThrow(() -> service.delete("1"));
+    }
+
+    @Test
+    void Delete_Should_ThrowExceptionWhenDeleteHasAnError() throws ErrorDeletingCharacterException {
+        //Arrange
+        doThrow(new ErrorDeletingCharacterException("Error deleting character", new RuntimeException("Error deleting in db"))).when(charactersRepositoryMock).delete("1");
+
+        //Act
+        //Assert
+        CouldNotDeleteCharacterException exception = assertThrows(CouldNotDeleteCharacterException.class, () -> {
+            service.delete("1");
+        });
+        assertThat(exception.getMessage()).contains("Error deleting character");
+        assertThat(exception.getCause()).isInstanceOfAny(ErrorDeletingCharacterException.class);
+    }
+
+    // ----------- FINDHOUSES() TESTS ---------------------------------
+
+    @Test
+    void FindHouses_Should_ReturnCorrectlyGivenThereAreHouses() throws ErrorObtainingHousesException, CouldNotSearchHousesException {
+        //Arrange
+        List<House> houses = List.of(
+                fixture.create(House.class),
+                fixture.create(House.class),
+                fixture.create(House.class)
+        );
+
+        when(housesRepositoryMock.getHouses()).thenReturn(houses);
+
+        //Act
+        List<House> housesRetrieved = service.findHouses();
+
+        //Assert
+        assertThat(housesRetrieved).usingRecursiveComparison().isEqualTo(houses);
+    }
+
+    @Test
+    void FindHouses_Should_ReturnCorrectlyEvenThoughThereAreNoHouses() throws ErrorObtainingHousesException, CouldNotSearchHousesException {
+        //Arrange
+        when(housesRepositoryMock.getHouses()).thenReturn(Collections.emptyList());
+
+        //Act
+        List<House> housesRetrieved = service.findHouses();
+
+        //Assert
+        assertThat(housesRetrieved).isEmpty();
+    }
+
+    @Test
+    void FindHouses_Should_ThrowExceptionWhenSearchHasAnError() throws ErrorObtainingHousesException {
+        //Arrange
+        when(housesRepositoryMock.getHouses()).thenThrow(new ErrorObtainingHousesException(new RuntimeException("Error reaching api")));
+
+        //Act
+        //Assert
+        CouldNotSearchHousesException exception = assertThrows(CouldNotSearchHousesException.class, service::findHouses);
+        assertThat(exception.getMessage()).contains("Could not search houses");
+        assertThat(exception.getCause()).isInstanceOfAny(ErrorObtainingHousesException.class);
+        assertThat(exception.getMostSpecificCause()).isInstanceOfAny(RuntimeException.class);
+    }
+
 }

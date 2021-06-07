@@ -21,9 +21,9 @@ public class PotterApiClient {
     }
 
     @Autowired(required = true)
-    public PotterApiClient(@Value("potterapi.baseURL") String baseUrl, @Value("potterapi.apikey") String apiKey) {
+    public PotterApiClient(@Value("${potterapi.baseURL}") String baseUrl, @Value("${potterapi.apikey}") String apiKey) {
         this.webClient = WebClient.builder()
-                .defaultHeader("apiKey", apiKey)
+                .defaultHeader("apikey", apiKey)
                 .baseUrl(baseUrl)
                 .build();
     }
