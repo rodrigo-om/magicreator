@@ -24,11 +24,6 @@ public class CharactersController {
         this.charactersManager = charactersManager;
     }
 
-    @GetMapping("/test")
-    public String testing() {
-        return "Test successful";
-    }
-
     @PostMapping("/character")
     public ResponseEntity<Character> create(@RequestBody CreateCharacterRequest request) {
         try {
